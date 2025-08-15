@@ -53,4 +53,24 @@ Answer:`;
   }
 }
 
-module.exports = { extractArgument, getEmbedding, generateChatResponse };
+async function summarizeText(textToSummarize, topic) {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const prompt = `Based on the following raw search results, provide a comprehensive, well-structured, and unbiased summary of the topic: "${topic}". Synthesize the information into a clear narrative.
+
+Search Results:
+---
+${textToSummarize}
+---
+
+Comprehensive Summary:`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Error in AI service (summarizeText):", error);
+    return `Failed to summarize text for topic: ${topic}`;
+  }
+}
+
+module.exports = { extractArgument, getEmbedding, generateChatResponse, summarizeText };

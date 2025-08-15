@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-const { extractArgument, getEmbedding, generateChatResponse } = require('./aiService');
+const { extractArgument, getEmbedding, generateChatResponse, summarizeText } = require('./aiService');
 const clustering = require('density-clustering');
 const snoowrap = require('snoowrap');
+const { fetchAndSummarize } = require('./ingestionService');
 require('dotenv').config();
 
 const app = express();
@@ -28,6 +29,21 @@ async function processAndStoreText(source_text) {
   const values = [source_text, extracted_argument, `[${embedding.join(',')}]`];
   await pool.query(insertQuery, values);
 }
+
+app.post('/ingest-research', async (req, res) => {
+    try {
+        const { topic } = req.body;
+        if (!topic) {
+            return res.status(400).json({ error: 'Topic is required.' });
+        }
+        const summary = await fetchAndSummarize(topic);
+        await processAndStoreText(summary);
+        res.status(200).json({ message: `Successfully researched and ingested summary for "${topic}".` });
+    } catch (error) {
+        console.error('Research ingestion error:', error);
+        res.status(500).json({ error: 'Failed to ingest research data.' });
+    }
+});
 
 app.post('/ingest-reddit', async (req, res) => {
   try {
@@ -94,17 +110,14 @@ app.post('/cluster', async (req, res) => {
         }
         const points = vectorsResult.rows.map(row => JSON.parse(row.embedding));
         const ids = vectorsResult.rows.map(row => row.id);
-        
         const dbscan = new clustering.DBSCAN();
         const clusters = dbscan.run(points, 0.7, 2);
-        
         const assignments = new Array(points.length).fill(-1);
         clusters.forEach((cluster, clusterIndex) => {
             cluster.forEach(pointIndex => {
                 assignments[pointIndex] = clusterIndex;
             });
         });
-        
         const client = await pool.connect();
         await client.query('BEGIN');
         await client.query('UPDATE arguments SET cluster_id = NULL');
@@ -115,7 +128,6 @@ app.post('/cluster', async (req, res) => {
         }
         await client.query('COMMIT');
         client.release();
-        
         res.json({ message: 'Clustering successful!', clustersFound: clusters.length });
     } catch(error) {
         console.error('Clustering process failed:', error);
