@@ -13,7 +13,8 @@ import { TimelineFilter } from './components/TimelineFilter';
 import { DetailsPanel } from './components/DetailsPanel';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import { SuggestionForm } from './components/SuggestionForm';
-import mainLogo from './assets/janmatai_logo_bgless.png'; // Ensure this path and extension are correct
+import { AboutPage } from './pages/AboutPage';
+import mainLogo from './assets/janmatai_logo_bgless.png';
 
 interface Argument {
   id: number;
@@ -28,20 +29,17 @@ const AppContainer = styled.div`
   position: relative;
   z-index: 1;
 `;
-
 const Header = styled.header`
   text-align: center;
   margin-bottom: 3rem;
   padding: 1rem;
   padding-top: 6rem;
 `;
-
 const HeaderLogo = styled.img`
   width: 80px;
   height: 80px;
   margin-bottom: -3.5rem;
 `;
-
 const Title = styled.h1`
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   font-weight: 800;
@@ -54,7 +52,6 @@ const Title = styled.h1`
   text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
   margin-bottom: 0.25rem;
 `;
-
 const Subtitle = styled.p`
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   font-weight: 400;
@@ -64,7 +61,6 @@ const Subtitle = styled.p`
   letter-spacing: 0.5px;
   text-shadow: 0px 1px 5px rgba(0, 0, 0, 0.4);
 `;
-
 const GlassPanel = styled.div`
   background: rgba(40, 40, 40, 0.4);
   backdrop-filter: blur(10px);
@@ -72,13 +68,11 @@ const GlassPanel = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 `;
-
 const MapContainer = styled(GlassPanel)`
   height: 500px;
   width: 100%;
   position: relative;
 `;
-
 const Controls = styled.div`
   display: flex;
   flex-direction: column;
@@ -87,7 +81,6 @@ const Controls = styled.div`
   margin-bottom: 3rem;
   margin-top: 1.5rem;
 `;
-
 const ClusterButton = styled(motion.button)`
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -99,7 +92,6 @@ const ClusterButton = styled(motion.button)`
   cursor: pointer;
   &:disabled { background-color: #333; cursor: not-allowed; }
 `;
-
 const SectionTitle = styled.h2`
   text-align: center;
   color: #ccc;
@@ -107,7 +99,6 @@ const SectionTitle = styled.h2`
   margin-top: 4rem;
   margin-bottom: 1rem;
 `;
-
 const Footer = styled.footer`
   margin-top: 5rem;
   padding-bottom: 2rem;
@@ -186,6 +177,16 @@ function App() {
     fetchArguments();
   }, [fetchArguments]);
 
+  useEffect(() => {
+    const handleDataUpdate = () => {
+      fetchArguments();
+    };
+    window.addEventListener('dataUpdated', handleDataUpdate);
+    return () => {
+      window.removeEventListener('dataUpdated', handleDataUpdate);
+    };
+  }, [fetchArguments]);
+
   return (
     <>
       <Navbar user={user} onLogout={handleLogout} setActivePage={setActivePage} />
@@ -222,8 +223,8 @@ function App() {
               </Controls>
 
               <SectionTitle>Data Sources</SectionTitle>
-              <IngestionForm onIngestionComplete={fetchArguments} />
-              <AnalysisForm onIngestionComplete={fetchArguments} />
+              <IngestionForm />
+              <AnalysisForm />
 
               <SectionTitle>Ask AxiomBot (RAG Chatbot)</SectionTitle>
               <Chatbot />

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
-const FormWrapper = styled.div`
+const FormWrapper = styled(motion.div)`
   max-width: 600px;
   margin: 0 auto;
-  margin-top: 2rem; /* <-- ADD THIS LINE */
+  margin-top: 2rem;
 `;
 
 const FormContainer = styled.form`
@@ -59,21 +59,19 @@ const SubmitButton = styled(motion.button)`
   }
 `;
 
-const ResultContainer = styled.div<{ $error: boolean }>`
+const ResultContainer = styled(motion.div)<{ $error: boolean }>`
   margin-top: 1rem;
   padding: 1rem;
-  background-color: var(--dark-surface);
-  border-radius: 8px;
+  background: rgba(40, 40, 40, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 4px solid ${props => (props.$error ? '#ff6b6b' : '#1dd1a1')};
   white-space: pre-wrap;
   word-wrap: break-word;
 `;
 
-interface AnalysisFormProps {
-  onAnalysisComplete: () => void;
-}
-
-export const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisComplete }) => {
+export const AnalysisForm: React.FC = () => {
   const [text, setText] = useState('');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -99,7 +97,7 @@ export const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisComplete }
 
       const data = await response.json();
       setResult(data.argument);
-      onAnalysisComplete();
+      window.dispatchEvent(new CustomEvent('dataUpdated'));
       setText('');
 
     } catch (err) {
@@ -110,32 +108,49 @@ export const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisComplete }
   };
 
   return (
-    <FormWrapper>
-    <FormContainer onSubmit={handleSubmit}>
-    <FormHeader>Add a New Viewpoint to the Map</FormHeader>
-    <TextArea
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      placeholder="e.g., The new policy is a step in the right direction..."
-      required
-    />
-    <SubmitButton 
-      type="submit" 
-      disabled={isLoading}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <FormWrapper
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
     >
-      {isLoading ? 'Processing...' : 'Add to Map'}
-    </SubmitButton>
-  </FormContainer>
+      <FormContainer onSubmit={handleSubmit}>
+        <FormHeader>Add a New Viewpoint to the Map</FormHeader>
+        <TextArea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="e.g., The new policy is a step in the right direction..."
+          required
+        />
+        <SubmitButton 
+          type="submit" 
+          disabled={isLoading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {isLoading ? 'Processing...' : 'Add to Map'}
+        </SubmitButton>
+      </FormContainer>
 
       {result && (
-        <ResultContainer $error={false}>
+        <ResultContainer 
+          $error={false}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <strong>Successfully Added:</strong>
           <p>{result}</p>
         </ResultContainer>
       )}
-      {error && <ResultContainer $error={true}><strong>Error:</strong><p>{error}</p></ResultContainer>}
+      {error && (
+        <ResultContainer 
+          $error={true}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <strong>Error:</strong>
+          <p>{error}</p>
+        </ResultContainer>
+      )}
     </FormWrapper>
   );
 };

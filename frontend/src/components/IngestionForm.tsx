@@ -50,11 +50,7 @@ const StatusMessage = styled.div<{ $success: boolean }>`
   border: 1px solid ${props => (props.$success ? '#1dd1a1' : '#ff6b6b')};
 `;
 
-interface IngestionFormProps {
-  onIngestionComplete: () => void;
-}
-
-export const IngestionForm: React.FC<IngestionFormProps> = ({ onIngestionComplete }) => {
+export const IngestionForm: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<{ message: string; success: boolean } | null>(null);
@@ -78,7 +74,7 @@ export const IngestionForm: React.FC<IngestionFormProps> = ({ onIngestionComplet
       }
 
       setStatus({ message: data.message, success: true });
-      onIngestionComplete();
+      window.dispatchEvent(new CustomEvent('dataUpdated'));
       setTopic('');
     } catch (error) {
       setStatus({ message: error instanceof Error ? error.message : 'An unknown error occurred.', success: false });
