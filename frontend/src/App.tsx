@@ -191,7 +191,7 @@ function App() {
               <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
             </Header>
             <main>
-              <SectionTitle>Live Narrative Map</SectionTitle>
+              <SectionTitle>Live Narrative 3D Map</SectionTitle>
               <MapContainer>
                 <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
                 <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
