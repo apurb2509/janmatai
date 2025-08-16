@@ -12,7 +12,7 @@ import { IngestionForm } from './components/IngestionForm';
 import { TimelineFilter } from './components/TimelineFilter';
 import { DetailsPanel } from './components/DetailsPanel';
 import { AnimatedBackground } from './components/AnimatedBackground';
-import { AboutPage } from './pages/AboutPage';
+import { SuggestionForm } from './components/SuggestionForm';
 
 interface Argument {
   id: number;
@@ -101,6 +101,12 @@ const SectionTitle = styled.h2`
   margin-bottom: 1rem;
 `;
 
+const Footer = styled.footer`
+  margin-top: 5rem;
+  padding-bottom: 2rem;
+  width: 100%;
+`;
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activePage, setActivePage] = useState<'home' | 'about'>('home');
@@ -178,42 +184,48 @@ function App() {
       <Navbar user={user} onLogout={handleLogout} setActivePage={setActivePage} />
       <AnimatedBackground />
       {activePage === 'home' ? (
-        <AppContainer>
-          <Header>
-            <Title>Janmat AI</Title>
-            <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
-          </Header>
-          <main>
-            <SectionTitle>Live Narrative Map</SectionTitle>
-            <MapContainer>
-              <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
-              <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
-            </MapContainer>
-            <Controls>
-              <TimelineFilter
-                startDate={startDate}
-                endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-              />
-              <ClusterButton 
-                onClick={handleCluster} 
-                disabled={isClustering}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isClustering ? 'Calculating...' : 'Find Clusters'}
-              </ClusterButton>
-            </Controls>
+        <>
+          <AppContainer>
+            <Header>
+              <Title>Janmat AI</Title>
+              <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
+            </Header>
+            <main>
+              <SectionTitle>Live Narrative Map</SectionTitle>
+              <MapContainer>
+                <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
+                <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
+              </MapContainer>
+              <Controls>
+                <TimelineFilter
+                  startDate={startDate}
+                  endDate={endDate}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                />
+                <ClusterButton 
+                  onClick={handleCluster} 
+                  disabled={isClustering}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isClustering ? 'Calculating...' : 'Find Clusters'}
+                </ClusterButton>
+              </Controls>
 
-            <SectionTitle>Data Sources</SectionTitle>
-            <IngestionForm onIngestionComplete={fetchArguments} />
-            <AnalysisForm onIngestionComplete={fetchArguments} />
+              <SectionTitle>Data Sources</SectionTitle>
+              <IngestionForm onIngestionComplete={fetchArguments} />
+              <AnalysisForm onIngestionComplete={fetchArguments} />
 
-            <SectionTitle>Ask the Data</SectionTitle>
-            <Chatbot />
-          </main>
-        </AppContainer>
+              <SectionTitle>Ask AxiomBot (RAG Chatbot)</SectionTitle>
+              <Chatbot />
+            </main>
+          </AppContainer>
+          <Footer>
+            <SectionTitle>Suggestions & Improvements</SectionTitle>
+            <SuggestionForm />
+          </Footer>
+        </>
       ) : (
         <AboutPage />
       )}

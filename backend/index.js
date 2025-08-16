@@ -15,28 +15,35 @@ app.use(cors());
 app.use(express.json());
 
 async function processAndStoreText(source_text) {
-  if (!source_text || source_text.startsWith("No recent news articles found for")) {
-    return;
-  }
+  if (!source_text || source_text.startsWith("No recent news articles found for")) { return; }
   const extracted_argument = await extractArgument(source_text);
-  if (!extracted_argument || extracted_argument === "Failed to extract argument.") {
-    throw new Error('Could not extract argument from text.');
-  }
+  if (!extracted_argument || extracted_argument === "Failed to extract argument.") { throw new Error('Could not extract argument from text.'); }
   const embedding = await getEmbedding(extracted_argument);
-  if (!embedding) {
-    throw new Error('Could not generate embedding for argument.');
-  }
+  if (!embedding) { throw new Error('Could not generate embedding for argument.'); }
   const insertQuery = 'INSERT INTO arguments(source_text, extracted_argument, embedding) VALUES($1, $2, $3)';
   const values = [source_text, extracted_argument, `[${embedding.join(',')}]`];
   await pool.query(insertQuery, values);
 }
 
+app.post('/submit-suggestion', async (req, res) => {
+    try {
+        const { name, age, description_tags, suggestion_text } = req.body;
+        if (!description_tags || description_tags.length === 0 || !suggestion_text) {
+            return res.status(400).json({ error: 'Description tags and suggestion text are required.' });
+        }
+        const insertQuery = 'INSERT INTO suggestions(name, age, description_tags, suggestion_text) VALUES($1, $2, $3, $4)';
+        await pool.query(insertQuery, [name || null, age || null, description_tags, suggestion_text]);
+        res.status(201).json({ message: 'Suggestion submitted successfully. Thank you!' });
+    } catch (error) {
+        console.error('Failed to submit suggestion:', error);
+        res.status(500).json({ error: 'Failed to submit suggestion.' });
+    }
+});
+
 app.post('/log-activity', async (req, res) => {
     try {
         const { userId, fullName, email, eventType } = req.body;
-        if (!userId || !eventType) {
-            return res.status(400).json({ error: 'User ID and event type are required.' });
-        }
+        if (!userId || !eventType) { return res.status(400).json({ error: 'User ID and event type are required.' }); }
         const insertQuery = 'INSERT INTO user_activity(user_id, full_name, email, event_type) VALUES($1, $2, $3, $4)';
         await pool.query(insertQuery, [userId, fullName, email, eventType]);
         res.status(200).json({ message: 'Activity logged successfully.' });
@@ -49,15 +56,13 @@ app.post('/log-activity', async (req, res) => {
 app.post('/ingest-research', async (req, res) => {
     try {
         const { topic } = req.body;
-        if (!topic) {
-            return res.status(400).json({ error: 'Topic is required.' });
-        }
+        if (!topic) { return res.status(400).json({ error: 'Topic is required.' }); }
         const summary = await fetchAndSummarize(topic);
         await processAndStoreText(summary);
         res.status(200).json({ message: `Successfully researched and ingested summary for "${topic}".` });
     } catch (error) {
-        console.error('Research ingestion error:', error);
-        res.status(500).json({ error: 'Failed to ingest research data.' });
+        console.error('Research ingestion error:', error.message);
+        res.status(500).json({ error: error.message || 'Failed to ingest research data.' });
     }
 });
 
@@ -66,10 +71,7 @@ app.post('/process', async (req, res) => {
     const { text } = req.body;
     await processAndStoreText(text);
     const argument = await extractArgument(text); 
-    res.status(201).json({ 
-      message: "Processing successful",
-      argument: argument
-    });
+    res.status(201).json({ message: "Processing successful", argument: argument });
   } catch (error) {
     console.error('Processing error:', error);
     res.status(500).json({ error: 'An unexpected error occurred during processing.' });
@@ -97,18 +99,14 @@ app.get('/arguments', async (req, res) => {
 app.post('/cluster', async (req, res) => {
     try {
         const vectorsResult = await pool.query('SELECT id, embedding FROM arguments');
-        if (vectorsResult.rows.length < 2) { 
-            return res.json({ message: 'Not enough arguments to cluster.' });
-        }
+        if (vectorsResult.rows.length < 2) { return res.json({ message: 'Not enough arguments to cluster.' }); }
         const points = vectorsResult.rows.map(row => JSON.parse(row.embedding));
         const ids = vectorsResult.rows.map(row => row.id);
         const dbscan = new clustering.DBSCAN();
         const clusters = dbscan.run(points, 0.7, 2);
         const assignments = new Array(points.length).fill(-1);
         clusters.forEach((cluster, clusterIndex) => {
-            cluster.forEach(pointIndex => {
-                assignments[pointIndex] = clusterIndex;
-            });
+            cluster.forEach(pointIndex => { assignments[pointIndex] = clusterIndex; });
         });
         const client = await pool.connect();
         await client.query('BEGIN');
@@ -130,13 +128,9 @@ app.post('/cluster', async (req, res) => {
 app.post('/chat', async (req, res) => {
   try {
     const { question } = req.body;
-    if (!question) {
-      return res.status(400).json({ error: 'Question is required' });
-    }
+    if (!question) { return res.status(400).json({ error: 'Question is required' }); }
     const queryEmbedding = await getEmbedding(question);
-    if (!queryEmbedding) {
-      return res.status(500).json({ error: 'Failed to create embedding for the question.' });
-    }
+    if (!queryEmbedding) { return res.status(500).json({ error: 'Failed to create embedding for the question.' }); }
     const contextResult = await pool.query("SELECT * FROM match_arguments($1, 0.5, 5)", [`[${queryEmbedding.join(',')}]`]);
     const context = contextResult.rows;
     let answer;
