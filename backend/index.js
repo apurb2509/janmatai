@@ -6,6 +6,7 @@ const { extractArgument, getEmbedding, generateChatResponse, summarizeText, gene
 const clustering = require('density-clustering');
 const snoowrap = require('snoowrap');
 const { fetchAndSummarize } = require('./ingestionService');
+const { startWorker } = require('./worker.js');
 require('dotenv').config();
 
 const app = express();
@@ -166,3 +167,5 @@ app.post('/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running successfully on http://localhost:${PORT}`);
 });
+
+startWorker();
