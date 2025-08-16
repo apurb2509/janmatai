@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
+import { auth } from './firebase';
+import { Navbar } from './components/Navbar';
 import { AnalysisForm } from './components/AnalysisForm';
 import { NarrativeMap } from './components/NarrativeMap';
 import { Chatbot } from './components/Chatbot';
@@ -27,6 +31,7 @@ const Header = styled.header`
   text-align: center;
   margin-bottom: 3rem;
   padding: 1rem;
+  padding-top: 6rem;
 `;
 
 const Title = styled.h1`
@@ -34,16 +39,11 @@ const Title = styled.h1`
   font-weight: 800;
   font-size: 4rem;
   letter-spacing: -3px;
-  
-  /* High-contrast, vibrant gradient */
   background: linear-gradient(90deg, #F3F3F3, #C7C7C7);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  
-  /* Sharp drop shadow for readability */
   text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
-  
   margin-bottom: 0.25rem;
 `;
 
@@ -51,7 +51,7 @@ const Subtitle = styled.p`
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   font-weight: 400;
   font-size: 1.25rem;
-  color: rgba(220, 220, 220, 0.8); /* Brighter, clearer grey */
+  color: rgba(220, 220, 220, 0.8);
   margin-top: 0;
   letter-spacing: 0.5px;
   text-shadow: 0px 1px 5px rgba(0, 0, 0, 0.4);
@@ -101,11 +101,50 @@ const SectionTitle = styled.h2`
 `;
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
   const [args, setArgs] = useState<Argument[]>([]);
   const [isClustering, setIsClustering] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedArgument, setSelectedArgument] = useState<Argument | null>(null);
+
+  const logActivity = async (eventType: 'login' | 'logout', userToLog: User) => {
+    try {
+      await fetch('http://localhost:3001/log-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType,
+          userId: userToLog.uid,
+          fullName: userToLog.displayName,
+          email: userToLog.email,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to log activity:', error);
+    }
+  };
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        if (user === null) {
+          logActivity('login', currentUser);
+        }
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleLogout = async () => {
+    if (user) {
+      await logActivity('logout', user);
+      await signOut(auth);
+    }
+  };
 
   const fetchArguments = useCallback(async () => {
     try {
@@ -134,6 +173,7 @@ function App() {
 
   return (
     <>
+      <Navbar user={user} onLogout={handleLogout} />
       <AnimatedBackground />
       <AppContainer>
         <Header>
@@ -165,9 +205,9 @@ function App() {
 
           <SectionTitle>Data Sources</SectionTitle>
           <IngestionForm onIngestionComplete={fetchArguments} />
-          <AnalysisForm onIngestionComplete={fetchArguments} />
+          <AnalysisForm onAnalysisComplete={fetchArguments} />
 
-          <SectionTitle>AxiomBot (RAG Chatbot)</SectionTitle>
+          <SectionTitle>Ask AxiomBot (RAG Chatbot)</SectionTitle>
           <Chatbot />
         </main>
       </AppContainer>

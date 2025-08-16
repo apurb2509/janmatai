@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-// This line is now corrected to include all necessary functions
 const { extractArgument, getEmbedding, generateChatResponse, summarizeText, generateGeneralResponse } = require('./aiService');
 const clustering = require('density-clustering');
 const snoowrap = require('snoowrap');
@@ -16,8 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 async function processAndStoreText(source_text) {
-  if (!source_text) {
-    throw new Error('Source text is empty.');
+  if (!source_text || source_text.startsWith("No recent news articles found for")) {
+    return;
   }
   const extracted_argument = await extractArgument(source_text);
   if (!extracted_argument || extracted_argument === "Failed to extract argument.") {
@@ -32,6 +31,21 @@ async function processAndStoreText(source_text) {
   await pool.query(insertQuery, values);
 }
 
+app.post('/log-activity', async (req, res) => {
+    try {
+        const { userId, fullName, email, eventType } = req.body;
+        if (!userId || !eventType) {
+            return res.status(400).json({ error: 'User ID and event type are required.' });
+        }
+        const insertQuery = 'INSERT INTO user_activity(user_id, full_name, email, event_type) VALUES($1, $2, $3, $4)';
+        await pool.query(insertQuery, [userId, fullName, email, eventType]);
+        res.status(200).json({ message: 'Activity logged successfully.' });
+    } catch (error) {
+        console.error('Failed to log user activity:', error);
+        res.status(500).json({ error: 'Failed to log activity.' });
+    }
+});
+
 app.post('/ingest-research', async (req, res) => {
     try {
         const { topic } = req.body;
@@ -45,30 +59,6 @@ app.post('/ingest-research', async (req, res) => {
         console.error('Research ingestion error:', error);
         res.status(500).json({ error: 'Failed to ingest research data.' });
     }
-});
-
-app.post('/ingest-reddit', async (req, res) => {
-  try {
-    const { topic, subreddit } = req.body;
-    if (!topic || !subreddit) {
-      return res.status(400).json({ error: 'Topic and subreddit are required.' });
-    }
-    const r = new snoowrap({
-        userAgent: 'JanmatAI/1.0',
-        clientId: process.env.REDDIT_CLIENT_ID,
-        clientSecret: process.env.REDDIT_CLIENT_SECRET,
-        username: process.env.REDDIT_USERNAME,
-        password: process.env.REDDIT_PASSWORD
-    });
-    const posts = await r.getSubreddit(subreddit).search({ query: topic, limit: 10, sort: 'relevance', time: 'all' });
-    const processingPromises = posts.map(post => processAndStoreText(post.title));
-    const results = await Promise.allSettled(processingPromises);
-    const successfulPosts = results.filter(r => r.status === 'fulfilled').length;
-    res.status(200).json({ message: `Successfully ingested and processed ${successfulPosts} out of ${posts.length} posts.` });
-  } catch (error) {
-    console.error('Reddit ingestion error:', error);
-    res.status(500).json({ error: 'Failed to ingest data from Reddit.' });
-  }
 });
 
 app.post('/process', async (req, res) => {
@@ -151,10 +141,8 @@ app.post('/chat', async (req, res) => {
     const context = contextResult.rows;
     let answer;
     if (context.length === 0) {
-      console.log("No context found in DB. Falling back to general response.");
       answer = await generateGeneralResponse(question);
     } else {
-      console.log(`Found ${context.length} relevant documents in DB. Generating RAG response.`);
       answer = await generateChatResponse(question, context);
     }
     res.json({ answer });

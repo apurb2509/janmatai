@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 
+const FormWrapper = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  margin-top: 2rem; /* <-- ADD THIS LINE */
+`;
+
 const FormContainer = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 2rem auto;
+  padding: 1rem;
+  background-color: var(--dark-surface);
+  border-radius: 12px;
 `;
 
 const TextArea = styled.textarea`
@@ -15,11 +21,10 @@ const TextArea = styled.textarea`
   padding: 0.75rem;
   border-radius: 8px;
   border: 1px solid #555;
-  background-color: var(--dark-surface);
+  background-color: #333;
   color: var(--font-color);
   font-size: 1rem;
   resize: vertical;
-
   &:focus {
     outline: 2px solid var(--accent-color);
     border-color: var(--accent-color);
@@ -35,24 +40,18 @@ const SubmitButton = styled.button`
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #535bf2;
-  }
-
   &:disabled {
     background-color: #333;
     cursor: not-allowed;
   }
 `;
 
-const ResultContainer = styled.div`
-  margin-top: 1.5rem;
+const ResultContainer = styled.div<{ $error: boolean }>`
+  margin-top: 1rem;
   padding: 1rem;
   background-color: var(--dark-surface);
   border-radius: 8px;
-  border-left: 4px solid var(--accent-color);
+  border-left: 4px solid ${props => (props.$error ? '#ff6b6b' : '#1dd1a1')};
   white-space: pre-wrap;
   word-wrap: break-word;
 `;
@@ -98,7 +97,7 @@ export const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisComplete }
   };
 
   return (
-    <>
+    <FormWrapper>
       <FormContainer onSubmit={handleSubmit}>
         <label htmlFor="text-input">Add a new viewpoint to the map:</label>
         <TextArea
@@ -114,12 +113,12 @@ export const AnalysisForm: React.FC<AnalysisFormProps> = ({ onAnalysisComplete }
       </FormContainer>
 
       {result && (
-        <ResultContainer>
+        <ResultContainer $error={false}>
           <strong>Successfully Added:</strong>
           <p>{result}</p>
         </ResultContainer>
       )}
-      {error && <ResultContainer style={{ borderColor: 'red' }}><strong>Error:</strong><p>{error}</p></ResultContainer>}
-    </>
+      {error && <ResultContainer $error={true}><strong>Error:</strong><p>{error}</p></ResultContainer>}
+    </FormWrapper>
   );
 };

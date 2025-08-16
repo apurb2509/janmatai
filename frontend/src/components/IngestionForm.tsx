@@ -40,14 +40,14 @@ const IngestButton = styled.button`
   }
 `;
 
-const StatusMessage = styled.div<{ success: boolean }>`
+const StatusMessage = styled.div<{ $success: boolean }>`
   text-align: center;
   margin-top: 1rem;
   padding: 0.75rem;
   border-radius: 8px;
-  background-color: ${props => (props.success ? 'rgba(29, 209, 161, 0.2)' : 'rgba(255, 107, 107, 0.2)')};
-  color: ${props => (props.success ? '#1dd1a1' : '#ff6b6b')};
-  border: 1px solid ${props => (props.success ? '#1dd1a1' : '#ff6b6b')};
+  background-color: ${props => (props.$success ? 'rgba(29, 209, 161, 0.2)' : 'rgba(255, 107, 107, 0.2)')};
+  color: ${props => (props.$success ? '#1dd1a1' : '#ff6b6b')};
+  border: 1px solid ${props => (props.$success ? '#1dd1a1' : '#ff6b6b')};
 `;
 
 interface IngestionFormProps {
@@ -93,7 +93,7 @@ export const IngestionForm: React.FC<IngestionFormProps> = ({ onIngestionComplet
         <Input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="Enter a topic to research..." />
         <IngestButton type="submit" disabled={isLoading}>{isLoading ? 'Researching...' : 'Research & Ingest'}</IngestButton>
       </IngestContainer>
-      {status && <StatusMessage success={status.success}>{status.message}</StatusMessage>}
+      {status && <StatusMessage $success={status.success}>{status.message}</StatusMessage>}
     </IngestWrapper>
   );
 };
