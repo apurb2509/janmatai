@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-const { extractArgument, getEmbedding, generateChatResponse, summarizeText } = require('./aiService');
+// This line is now corrected to include all necessary functions
+const { extractArgument, getEmbedding, generateChatResponse, summarizeText, generateGeneralResponse } = require('./aiService');
 const clustering = require('density-clustering');
 const snoowrap = require('snoowrap');
 const { fetchAndSummarize } = require('./ingestionService');
@@ -147,10 +148,14 @@ app.post('/chat', async (req, res) => {
     }
     const contextResult = await pool.query("SELECT * FROM match_arguments($1, 0.5, 5)", [`[${queryEmbedding.join(',')}]`]);
     const context = contextResult.rows;
+    let answer;
     if (context.length === 0) {
-      return res.json({ answer: "I'm sorry, I couldn't find enough relevant information in the database to answer that question." });
+      console.log("No context found in DB. Falling back to general response.");
+      answer = await generateGeneralResponse(question);
+    } else {
+      console.log(`Found ${context.length} relevant documents in DB. Generating RAG response.`);
+      answer = await generateChatResponse(question, context);
     }
-    const answer = await generateChatResponse(question, context);
     res.json({ answer });
   } catch (error) {
     console.error('Chat endpoint error:', error);

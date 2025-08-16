@@ -9,8 +9,7 @@ async function extractArgument(text) {
     const prompt = `Analyze this comment. Summarize the user's core viewpoint or argument in a single, neutral sentence. Here is the comment: "${text}"`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const argument = response.text();
-    return argument;
+    return response.text();
   } catch (error) {
     console.error("Error in AI service (extractArgument):", error);
     return "Failed to extract argument.";
@@ -45,12 +44,28 @@ Answer:`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const answer = response.text();
-    return answer;
+    return response.text();
   } catch (error) {
     console.error("Error in AI service (generateChatResponse):", error);
     return "I'm sorry, I encountered an error while generating a response.";
   }
+}
+
+async function generateGeneralResponse(question) {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+        const prompt = `You are AxiomBot, a helpful AI assistant for the Janmat AI platform. Be friendly, concise, and helpful. Answer the user's question.
+
+User's Question: "${question}"
+
+Answer:`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error("Error in AI service (generateGeneralResponse):", error);
+        return "I'm sorry, I seem to be having trouble thinking right now.";
+    }
 }
 
 async function summarizeText(textToSummarize, topic) {
@@ -73,4 +88,4 @@ Comprehensive Summary:`;
   }
 }
 
-module.exports = { extractArgument, getEmbedding, generateChatResponse, summarizeText };
+module.exports = { extractArgument, getEmbedding, generateChatResponse, summarizeText, generateGeneralResponse };

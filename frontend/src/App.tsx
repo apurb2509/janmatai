@@ -167,7 +167,7 @@ function App() {
           <IngestionForm onIngestionComplete={fetchArguments} />
           <AnalysisForm onIngestionComplete={fetchArguments} />
 
-          <SectionTitle>Ask the Data</SectionTitle>
+          <SectionTitle>AxiomBot (RAG Chatbot)</SectionTitle>
           <Chatbot />
         </main>
       </AppContainer>
