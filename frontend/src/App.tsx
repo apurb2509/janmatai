@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { AnalysisForm } from './components/AnalysisForm';
 import { NarrativeMap } from './components/NarrativeMap';
 import { Chatbot } from './components/Chatbot';
 import { IngestionForm } from './components/IngestionForm';
 import { TimelineFilter } from './components/TimelineFilter';
 import { DetailsPanel } from './components/DetailsPanel';
+import { AnimatedBackground } from './components/AnimatedBackground';
 
-export interface Argument {
+interface Argument {
   id: number;
   extracted_argument: string;
   cluster_id: number | null;
@@ -17,6 +19,8 @@ const AppContainer = styled.div`
   padding: 2rem 4rem;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 `;
 
 const Header = styled.header`
@@ -36,12 +40,17 @@ const Subtitle = styled.p`
   margin-top: -1rem;
 `;
 
-const MapContainer = styled.div`
+const GlassPanel = styled.div`
+  background: rgba(40, 40, 40, 0.4);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+`;
+
+const MapContainer = styled(GlassPanel)`
   height: 500px;
   width: 100%;
-  background-color: var(--dark-surface);
-  border-radius: 12px;
-  border: 1px solid #333;
   position: relative;
 `;
 
@@ -54,7 +63,7 @@ const Controls = styled.div`
   margin-top: 1.5rem;
 `;
 
-const ClusterButton = styled.button`
+const ClusterButton = styled(motion.button)`
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   border: none;
@@ -63,8 +72,6 @@ const ClusterButton = styled.button`
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
-  &:hover { background-color: #17a07f; }
   &:disabled { background-color: #333; cursor: not-allowed; }
 `;
 
@@ -109,37 +116,45 @@ function App() {
   }, [fetchArguments]);
 
   return (
-    <AppContainer>
-      <Header>
-        <Title>Janmat AI</Title>
-        <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
-      </Header>
-      <main>
-        <SectionTitle>Live Narrative Map</SectionTitle>
-        <MapContainer>
-          <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
-          <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
-        </MapContainer>
-        <Controls>
-          <TimelineFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-          />
-          <ClusterButton onClick={handleCluster} disabled={isClustering}>
-            {isClustering ? 'Calculating...' : 'Find Clusters'}
-          </ClusterButton>
-        </Controls>
+    <>
+      <AnimatedBackground />
+      <AppContainer>
+        <Header>
+          <Title>Janmat AI</Title>
+          <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
+        </Header>
+        <main>
+          <SectionTitle>Live Narrative Map</SectionTitle>
+          <MapContainer>
+            <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
+            <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
+          </MapContainer>
+          <Controls>
+            <TimelineFilter
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+            />
+            <ClusterButton 
+              onClick={handleCluster} 
+              disabled={isClustering}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isClustering ? 'Calculating...' : 'Find Clusters'}
+            </ClusterButton>
+          </Controls>
 
-        <SectionTitle>Data Sources</SectionTitle>
-        <IngestionForm onIngestionComplete={fetchArguments} />
-        <AnalysisForm onAnalysisComplete={fetchArguments} />
+          <SectionTitle>Data Sources</SectionTitle>
+          <IngestionForm onIngestionComplete={fetchArguments} />
+          <AnalysisForm onAnalysisComplete={fetchArguments} />
 
-        <SectionTitle>Ask the Data</SectionTitle>
-        <Chatbot />
-      </main>
-    </AppContainer>
+          <SectionTitle>Ask the Data</SectionTitle>
+          <Chatbot />
+        </main>
+      </AppContainer>
+    </>
   );
 }
 
