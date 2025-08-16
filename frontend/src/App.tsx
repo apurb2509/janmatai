@@ -25,19 +25,36 @@ const AppContainer = styled.div`
 
 const Header = styled.header`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  padding: 1rem;
 `;
 
 const Title = styled.h1`
-  font-size: 3rem;
-  color: var(--font-color);
-  letter-spacing: -1px;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  font-weight: 800;
+  font-size: 4rem;
+  letter-spacing: -3px;
+  
+  /* High-contrast, vibrant gradient */
+  background: linear-gradient(90deg, #F3F3F3, #C7C7C7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Sharp drop shadow for readability */
+  text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
+  
+  margin-bottom: 0.25rem;
 `;
 
 const Subtitle = styled.p`
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  font-weight: 400;
   font-size: 1.25rem;
-  color: #aaa;
-  margin-top: -1rem;
+  color: rgba(220, 220, 220, 0.8); /* Brighter, clearer grey */
+  margin-top: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0px 1px 5px rgba(0, 0, 0, 0.4);
 `;
 
 const GlassPanel = styled.div`
@@ -148,7 +165,7 @@ function App() {
 
           <SectionTitle>Data Sources</SectionTitle>
           <IngestionForm onIngestionComplete={fetchArguments} />
-          <AnalysisForm onAnalysisComplete={fetchArguments} />
+          <AnalysisForm onIngestionComplete={fetchArguments} />
 
           <SectionTitle>Ask the Data</SectionTitle>
           <Chatbot />
