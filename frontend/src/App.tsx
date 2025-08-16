@@ -13,6 +13,7 @@ import { TimelineFilter } from './components/TimelineFilter';
 import { DetailsPanel } from './components/DetailsPanel';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import { SuggestionForm } from './components/SuggestionForm';
+import mainLogo from './assets/janmatai_logo_bgless.png'; // Ensure this path and extension are correct
 
 interface Argument {
   id: number;
@@ -33,6 +34,12 @@ const Header = styled.header`
   margin-bottom: 3rem;
   padding: 1rem;
   padding-top: 6rem;
+`;
+
+const HeaderLogo = styled.img`
+  width: 80px;
+  height: 80px;
+  margin-bottom: -3.5rem;
 `;
 
 const Title = styled.h1`
@@ -187,6 +194,7 @@ function App() {
         <>
           <AppContainer>
             <Header>
+              <HeaderLogo src={mainLogo} alt="Janmat AI Logo" />
               <Title>Janmat AI</Title>
               <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
             </Header>
