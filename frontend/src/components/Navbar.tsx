@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
@@ -32,6 +32,7 @@ const LogoText = styled.div`
   font-size: 1.5rem;
   color: #fff;
   margin-right: 1rem;
+  cursor: pointer;
 `;
 
 const NavLinks = styled.div`
@@ -136,9 +137,10 @@ const TooltipText = styled.div`
 interface NavbarProps {
   user: User | null;
   onLogout: () => void;
+  setActivePage: (page: 'home' | 'about') => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, setActivePage }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -170,10 +172,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <LogoText>Janmat AI</LogoText>
+        <LogoText onClick={() => setActivePage('home')}>Janmat AI</LogoText>
         <NavLinks>
-          <NavLink>Home</NavLink>
-          <NavLink>About</NavLink>
+          <NavLink onClick={() => setActivePage('home')}>Home</NavLink>
+          <NavLink onClick={() => setActivePage('about')}>About</NavLink>
           <DropdownContainer ref={dropdownRef}>
             <NavLink onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
               Features
