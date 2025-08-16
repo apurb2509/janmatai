@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { signInWithPopup } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import logo from '../assets/janmatai_logo.png';
 
 const NavWrapper = styled.div`
   position: fixed;
@@ -27,12 +28,23 @@ const NavContainer = styled(motion.nav)`
   gap: 3rem;
 `;
 
+const LogoContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  margin-right: 1rem;
+`;
+
+const LogoImage = styled.img`
+  width: 32px;
+  height: 32px;
+`;
+
 const LogoText = styled.div`
   font-weight: 700;
   font-size: 1.5rem;
   color: #fff;
-  margin-right: 1rem;
-  cursor: pointer;
 `;
 
 const NavLinks = styled.div`
@@ -172,7 +184,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout, setActivePage })
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <LogoText onClick={() => setActivePage('home')}>Janmat AI</LogoText>
+        <LogoContainer onClick={() => setActivePage('home')}>
+          <LogoImage src={logo} alt="Janmat AI Logo" />
+          <LogoText>Janmat AI</LogoText>
+        </LogoContainer>
         <NavLinks>
           <NavLink onClick={() => setActivePage('home')}>Home</NavLink>
           <NavLink onClick={() => setActivePage('about')}>About</NavLink>
