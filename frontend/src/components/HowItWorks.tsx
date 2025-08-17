@@ -12,12 +12,19 @@ margin: 3rem 0;
 `;
 
 const SectionTitle = styled.h2`
-text-align: center;
-font-size: 2rem;
-font-weight: 700;
-color: #9aeaa1;
-margin-bottom: 1.5rem;
-text-shadow: 0 0 10px rgba(0, 0, 10, 0.3);
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  
+  /* New, more vibrant Cyan to Green Gradient */
+  background: linear-gradient(90deg, #00FFFF, #20C997, #1DD1A1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Subtle glow to match */
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.20);
 `;
 
 const SummaryParagraph = styled.p`
