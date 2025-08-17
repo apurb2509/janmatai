@@ -37,26 +37,26 @@ const topics = [
 ].sort((a, b) => a.label.localeCompare(b.label));
 
 const selectStyles = {
-  control: (styles) => ({ ...styles, backgroundColor: '#333', border: '1px solid #555', borderRadius: '8px', color: '#fff' }),
-  menu: (styles) => ({ ...styles, backgroundColor: '#282828', border: '1px solid #555', borderRadius: '8px' }),
+  control: (styles) => ({ ...styles, backgroundColor: 'rgba(20, 20, 20, 0.7)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: '#fff', minHeight: '50px' }),
+  menu: (styles) => ({ ...styles, backgroundColor: '#1c1c1c', border: '1px solid #555', borderRadius: '8px' }),
   option: (styles, { isFocused, isSelected }) => ({
     ...styles,
-    backgroundColor: isSelected ? '#00FFFF' : isFocused ? '#444' : '#282828',
-    color: isSelected ? '#000' : '#fff',
-    ':active': { ...styles[':active'], backgroundColor: '#00FFFF' },
+    backgroundColor: isSelected ? '#FF00FF' : isFocused ? 'rgba(255, 0, 255, 0.2)' : '#1c1c1c',
+    color: isSelected ? '#fff' : '#eee',
+    ':active': { ...styles[':active'], backgroundColor: '#FF00FF' },
   }),
-  multiValue: (styles) => ({ ...styles, backgroundColor: 'rgba(0, 255, 255, 0.2)', borderRadius: '6px' }),
-  multiValueLabel: (styles) => ({ ...styles, color: '#00FFFF' }),
-  multiValueRemove: (styles) => ({ ...styles, color: '#00FFFF', ':hover': { backgroundColor: '#00FFFF', color: 'black' } }),
+  multiValue: (styles) => ({ ...styles, background: 'linear-gradient(90deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2))', borderRadius: '6px' }),
+  multiValueLabel: (styles) => ({ ...styles, color: '#fff', fontWeight: '500' }),
+  multiValueRemove: (styles) => ({ ...styles, color: '#fff', ':hover': { backgroundColor: '#FF00FF', color: 'white' } }),
   input: (styles) => ({ ...styles, color: '#fff' }),
-  singleValue: (styles) => ({ ...styles, color: '#fff' }),
+  placeholder: (styles) => ({ ...styles, color: 'rgba(255, 255, 255, 0.5)' }),
 };
 
 const FormWrapper = styled(motion.div)`
-  background: rgba(40, 40, 40, 0.4);
-  backdrop-filter: blur(10px);
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2rem 4rem;
+  padding: 3rem 4rem;
 `;
 
 const Form = styled.form`
@@ -68,8 +68,9 @@ const Form = styled.form`
 `;
 
 const InputRow = styled.div`
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 `;
 
 const InputGroup = styled.div`
@@ -82,63 +83,81 @@ const InputGroup = styled.div`
 const Label = styled.label`
   font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  padding-left: 0.25rem;
 `;
 
 const Input = styled.input`
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #333;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(20, 20, 20, 0.7);
   color: #fff;
   font-size: 1rem;
+  transition: all 0.3s ease;
+  &:focus {
+    outline: none;
+    border-color: #FF00FF;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+  }
 `;
 
 const TextArea = styled.textarea`
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid #555;
-  background-color: #333;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(20, 20, 20, 0.7);
   color: #fff;
   font-size: 1rem;
   min-height: 120px;
   resize: vertical;
+  transition: all 0.3s ease;
+  &:focus {
+    outline: none;
+    border-color: #FF00FF;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+  }
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  margin-top: 1rem;
 `;
 
 const SubmitButton = styled(motion.button)`
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 2rem;
   border-radius: 8px;
   border: none;
-  background: #00FFFF;
-  color: #000;
+  background: linear-gradient(90deg, #FF00FF, #00FFFF);
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
+  text-shadow: 0 0 5px rgba(0,0,0,0.5);
 `;
 
 const ClearButton = styled(motion.button)`
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 2rem;
   border-radius: 8px;
-  border: 1px solid #555;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   background: transparent;
   color: #ccc;
   font-weight: bold;
   cursor: pointer;
 `;
 
+const MessageDisplay = styled.div`
+  min-height: 24px;
+  text-align: center;
+  font-size: 0.9rem;
+`;
+
 const ErrorMessage = styled.div`
   color: #ff6b6b;
-  font-size: 0.9rem;
-  text-align: center;
 `;
 const SuccessMessage = styled.div`
   color: #1dd1a1;
-  font-size: 0.9rem;
-  text-align: center;
 `;
 
 export const SuggestionForm: React.FC = () => {
@@ -153,6 +172,7 @@ export const SuggestionForm: React.FC = () => {
     const handleTagChange = (selectedOptions) => {
         if (selectedOptions.length > 3) {
             setError('Maximum 3 tags allowed.');
+            setTimeout(() => setError(''), 3000);
             return;
         }
         setError('');
@@ -197,16 +217,22 @@ export const SuggestionForm: React.FC = () => {
             setSuccess(data.message);
             setIsEditing(false);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+            if (err instanceof SyntaxError) {
+                setError("Received an invalid response from the server. Please check if the backend is running correctly.");
+            } else if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('An unknown error occurred.');
+            }
         }
     };
     
     return (
         <FormWrapper>
-            <Form>
+            <Form onSubmit={handleSubmit}>
                 <InputRow>
                     <InputGroup>
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">Name (Optional)</Label>
                         <Input id="name" type="text" value={name} onChange={e => setName(e.target.value)} disabled={!isEditing} />
                     </InputGroup>
                     <InputGroup>
@@ -232,15 +258,17 @@ export const SuggestionForm: React.FC = () => {
                     <Label htmlFor="suggestion">Improvements / Suggestions</Label>
                     <TextArea id="suggestion" value={suggestionText} onChange={e => setSuggestionText(e.target.value)} required disabled={!isEditing} />
                 </InputGroup>
-                {error && <ErrorMessage>{error}</ErrorMessage>}
-                {success && <SuccessMessage>{success}</SuccessMessage>}
+                <MessageDisplay>
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    {success && <SuccessMessage>{success}</SuccessMessage>}
+                </MessageDisplay>
                 <ButtonRow>
                     {isEditing ? (
                         <>
                             <ClearButton type="button" onClick={clearForm} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 Clear
                             </ClearButton>
-                            <SubmitButton type="submit" onClick={handleSubmit} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <SubmitButton type="submit" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 Send Feedback
                             </SubmitButton>
                         </>
