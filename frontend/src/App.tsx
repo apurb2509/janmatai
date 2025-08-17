@@ -14,6 +14,7 @@ import { DetailsPanel } from './components/DetailsPanel';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import { SuggestionForm } from './components/SuggestionForm';
 import { AboutPage } from './pages/AboutPage';
+import { HowItWorks } from './components/HowItWorks';
 import mainLogo from './assets/janmatai_logo_bgless.png';
 
 interface Argument {
@@ -31,7 +32,7 @@ const AppContainer = styled.div`
 `;
 const Header = styled.header`
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: -1.5rem;
   padding: 1rem;
   padding-top: 6rem;
 `;
@@ -218,10 +219,11 @@ function App() {
           <AppContainer>
             <Header>
               <HeaderLogo src={mainLogo} alt="Janmat AI Logo" />
-              <Title>Janmat AI</Title>
+              <Title>जनmat AI</Title>
               <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
             </Header>
             <main>
+              <HowItWorks />
               <SectionTitle>Live Narrative 3D Map (DBSCAN-based Clustering)</SectionTitle>
               <MapContainer>
                 <NarrativeMap 
