@@ -92,6 +92,15 @@ const ClusterButton = styled(motion.button)`
   cursor: pointer;
   &:disabled { background-color: #333; cursor: not-allowed; }
 `;
+const ResetViewButton = styled(motion.button)`
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+`;
 const SectionTitle = styled.h2`
   text-align: center;
   color: #ccc;
@@ -113,6 +122,17 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedArgument, setSelectedArgument] = useState<Argument | null>(null);
+  const [focusedClusterId, setFocusedClusterId] = useState<number | null>(null);
+
+  const handleBubbleClick = (argument: Argument) => {
+    setSelectedArgument(argument);
+    setFocusedClusterId(argument.cluster_id);
+  };
+
+  const handleMapReset = () => {
+    setSelectedArgument(null);
+    setFocusedClusterId(null);
+  };
 
   const logActivity = async (eventType: 'login' | 'logout', userToLog: User) => {
     try {
@@ -166,16 +186,14 @@ function App() {
 
   const handleCluster = async () => {
     setIsClustering(true);
+    setFocusedClusterId(null);
+    setSelectedArgument(null);
     try {
       await fetch('http://localhost:3001/cluster', { method: 'POST' });
       await fetchArguments();
     } catch (error) { console.error("Failed to run clustering:", error); } 
     finally { setIsClustering(false); }
   };
-
-  useEffect(() => {
-    fetchArguments();
-  }, [fetchArguments]);
 
   useEffect(() => {
     const handleDataUpdate = () => {
@@ -187,6 +205,10 @@ function App() {
     };
   }, [fetchArguments]);
 
+  useEffect(() => {
+    fetchArguments();
+  }, [fetchArguments]);
+
   return (
     <>
       <Navbar user={user} onLogout={handleLogout} setActivePage={setActivePage} />
@@ -196,13 +218,19 @@ function App() {
           <AppContainer>
             <Header>
               <HeaderLogo src={mainLogo} alt="Janmat AI Logo" />
-              <Title>जनmat AI</Title>
+              <Title>Janmat AI</Title>
               <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
             </Header>
             <main>
-              <SectionTitle>Live Narrative 3D Map</SectionTitle>
+              <SectionTitle>Live Narrative 3D Map (DBSCAN-based Clustering)</SectionTitle>
               <MapContainer>
-                <NarrativeMap arguments={args} onBubbleClick={setSelectedArgument} />
+                <NarrativeMap 
+                  arguments={args} 
+                  onBubbleClick={handleBubbleClick}
+                  onMapReset={handleMapReset}
+                  focusedClusterId={focusedClusterId}
+                  selectedArgument={selectedArgument}
+                />
                 <DetailsPanel argument={selectedArgument} onClose={() => setSelectedArgument(null)} />
               </MapContainer>
               <Controls>
@@ -220,6 +248,11 @@ function App() {
                 >
                   {isClustering ? 'Calculating...' : 'Find Clusters'}
                 </ClusterButton>
+                {focusedClusterId !== null && (
+                    <ResetViewButton onClick={handleMapReset} whileHover={{ scale: 1.05 }}>
+                        Reset View
+                    </ResetViewButton>
+                )}
               </Controls>
 
               <SectionTitle>Data Sources</SectionTitle>
