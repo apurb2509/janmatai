@@ -1,11 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-const { extractArgument, getEmbedding, generateChatResponse, summarizeText, generateGeneralResponse } = require('./aiService');
+const { getEmbedding, generateChatResponse, generateGeneralResponse } = require('./aiService');
 const clustering = require('density-clustering');
-const snoowrap = require('snoowrap');
-const { fetchAndSummarize } = require('./ingestionService');
-const { startWorker } = require('./worker.js');
+const { ingestionQueue } = require('./queue');
+const cron = require('node-cron');
 require('dotenv').config();
 
 const app = express();
@@ -14,29 +13,17 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-async function processAndStoreText(source_text) {
-  if (!source_text || source_text.startsWith("No recent news articles found for")) { return; }
-  const extracted_argument = await extractArgument(source_text);
-  if (!extracted_argument || extracted_argument === "Failed to extract argument.") { throw new Error('Could not extract argument from text.'); }
-  const embedding = await getEmbedding(extracted_argument);
-  if (!embedding) { throw new Error('Could not generate embedding for argument.'); }
-  const insertQuery = 'INSERT INTO arguments(source_text, extracted_argument, embedding) VALUES($1, $2, $3)';
-  const values = [source_text, extracted_argument, `[${embedding.join(',')}]`];
-  await pool.query(insertQuery, values);
-}
-
-app.post('/submit-suggestion', async (req, res) => {
+app.post('/ingest-research', async (req, res) => {
     try {
-        const { name, age, description_tags, suggestion_text } = req.body;
-        if (!description_tags || description_tags.length === 0 || !suggestion_text) {
-            return res.status(400).json({ error: 'Description tags and suggestion text are required.' });
+        const { topic } = req.body;
+        if (!topic) {
+            return res.status(400).json({ error: 'Topic is required.' });
         }
-        const insertQuery = 'INSERT INTO suggestions(name, age, description_tags, suggestion_text) VALUES($1, $2, $3, $4)';
-        await pool.query(insertQuery, [name || null, age || null, description_tags, suggestion_text]);
-        res.status(201).json({ message: 'Suggestion submitted successfully. Thank you!' });
+        await ingestionQueue.add('ingest-topic', { topic });
+        res.status(202).json({ message: `Research job for "${topic}" has been added to the queue.` });
     } catch (error) {
-        console.error('Failed to submit suggestion:', error);
-        res.status(500).json({ error: 'Failed to submit suggestion.' });
+        console.error('Failed to add job to queue:', error);
+        res.status(500).json({ error: 'Failed to add job to queue.' });
     }
 });
 
@@ -51,31 +38,6 @@ app.post('/log-activity', async (req, res) => {
         console.error('Failed to log user activity:', error);
         res.status(500).json({ error: 'Failed to log activity.' });
     }
-});
-
-app.post('/ingest-research', async (req, res) => {
-    try {
-        const { topic } = req.body;
-        if (!topic) { return res.status(400).json({ error: 'Topic is required.' }); }
-        const summary = await fetchAndSummarize(topic);
-        await processAndStoreText(summary);
-        res.status(200).json({ message: `Successfully researched and ingested summary for "${topic}".` });
-    } catch (error) {
-        console.error('Research ingestion error:', error.message);
-        res.status(500).json({ error: error.message || 'Failed to ingest research data.' });
-    }
-});
-
-app.post('/process', async (req, res) => {
-  try {
-    const { text } = req.body;
-    await processAndStoreText(text);
-    const argument = await extractArgument(text); 
-    res.status(201).json({ message: "Processing successful", argument: argument });
-  } catch (error) {
-    console.error('Processing error:', error);
-    res.status(500).json({ error: 'An unexpected error occurred during processing.' });
-  }
 });
 
 app.get('/arguments', async (req, res) => {
@@ -150,4 +112,24 @@ app.listen(PORT, () => {
   console.log(`Server is running successfully on http://localhost:${PORT}`);
 });
 
-startWorker();
+const TOPICS_TO_TRACK = [
+    "global economic trends",
+    "latest advancements in artificial intelligence",
+    "breakthroughs in renewable energy",
+    "geopolitical analysis south china sea",
+    "pharmaceutical research and development",
+    "future of space exploration",
+    "semiconductor industry news"
+];
+let currentTopicIndex = 0;
+
+cron.schedule('0 * * * *', async () => {
+  try {
+    const topic = TOPICS_TO_TRACK[currentTopicIndex];
+    console.log(`Scheduler: Adding hourly job for topic: "${topic}" to the queue.`);
+    await ingestionQueue.add('ingest-topic', { topic });
+    currentTopicIndex = (currentTopicIndex + 1) % TOPICS_TO_TRACK.length;
+  } catch (error) {
+    console.error("Scheduler: Failed to add hourly job to queue:", error);
+  }
+});
