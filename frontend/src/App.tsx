@@ -196,7 +196,7 @@ function App() {
           <AppContainer>
             <Header>
               <HeaderLogo src={mainLogo} alt="Janmat AI Logo" />
-              <Title>Janmat AI</Title>
+              <Title>जनmat AI</Title>
               <Subtitle>The Public Opinion Intelligence Platform</Subtitle>
             </Header>
             <main>
